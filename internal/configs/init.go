@@ -8,7 +8,7 @@ import (
 
 func InitializeViper() {
 	// set files name of config file
-	viper.SetConfigName("config")
+	viper.SetConfigName("config.dev")
 
 	// set path for config file
 	// in this case "." is the root

@@ -17,8 +17,8 @@ func main() {
 	v1 := router.Group("/v1")
 	{
 		v1.GET("/", services.HandleMain)
-		v1.POST("/login-gl", services.HandleGoogleLogin)
-		v1.POST("/callback-gl", services.CallBackFromGoogle)
+		v1.GET("/login-gl", services.HandleGoogleLogin)
+		v1.GET("/callback-gl", services.CallBackFromGoogle)
 	}
 
 	port := viper.GetString("port")

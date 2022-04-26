@@ -17,7 +17,7 @@ var (
 	oauthConfGl = &oauth2.Config{
 		ClientID:     "",
 		ClientSecret: "",
-		RedirectURL:  "http://localhost:8001/callback-gl",
+		RedirectURL:  "http://localhost:8001/v1/callback-gl",
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
@@ -52,18 +52,21 @@ func HandleGoogleLogin(c *gin.Context) {
 		- Redirect content to "/register-gl"
 */
 func CallBackFromGoogle(c *gin.Context) {
+	gentooHome := "http://localhost:3000/"
+	gentooRegister := "http://localhost:3000/signup"
+
 	if c.Request.FormValue("state") != oauthStateStringGl {
-		c.Redirect(http.StatusTemporaryRedirect, "/")
+		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 	}
 
 	token, err := oauthConfGl.Exchange(oauth2.NoContext, c.Request.FormValue("code"))
 	if err != nil {
-		c.Redirect(http.StatusTemporaryRedirect, "/")
+		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 	}
 
 	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
-		c.Redirect(http.StatusTemporaryRedirect, "/")
+		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 		return
 	}
 
@@ -71,7 +74,7 @@ func CallBackFromGoogle(c *gin.Context) {
 
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		c.Redirect(http.StatusTemporaryRedirect, "/")
+		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 	}
 
 	resBytes := []byte(string(string(content)))
@@ -80,14 +83,13 @@ func CallBackFromGoogle(c *gin.Context) {
 	verified_email := jsonRes["verified_email"].(bool)
 
 	if verified_email {
-		email := jsonRes["verified_email"].(string)
-		helpers.SetAuthenticationKey(c)
+		email := jsonRes["email"].(string)
 		helpers.SetUserInfo(email, c)
 
 		_, err := models.GetUserInfo(email)
 		if err == nil {
-			c.Redirect(http.StatusTemporaryRedirect, "/register-gl")
+			c.Redirect(http.StatusTemporaryRedirect, gentooRegister)
 		}
 	}
-	c.Redirect(http.StatusTemporaryRedirect, "/")
+	c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 }

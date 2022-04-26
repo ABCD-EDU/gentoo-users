@@ -8,6 +8,7 @@ import (
 
 	helpers "github.com/abcd-edu/gentoo-users/internal/services/helpers"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
 
@@ -26,12 +27,13 @@ func HandleLogin(c *gin.Context, oauthConf *oauth2.Config, oauthStateString stri
 
 	URL.RawQuery = parameters.Encode()
 	url := URL.String()
+	fmt.Println(url)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
 func HandleMain(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"api": "Login Authentication",
+		"api": viper.GetString("oauthStateString"),
 	})
 }
 

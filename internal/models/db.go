@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -29,6 +28,6 @@ func InitializeDB() {
 	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 }

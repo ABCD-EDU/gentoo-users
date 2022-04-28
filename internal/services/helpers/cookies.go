@@ -2,20 +2,19 @@ package helpers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 )
 
 var (
-	day = 24 * 60 * 60 * 1000
+	day = 1
 )
 
-func SetAuthenticationKey(c *gin.Context) {
+func SetAuthenticationKey(c *gin.Context, authToken string) {
 	_, err := c.Cookie("auth_key")
 
 	if err != nil {
 		c.SetCookie(
 			"auth_key",
-			viper.GetString("auth_key"),
+			authToken,
 			day,
 			"/",
 			"localhost",

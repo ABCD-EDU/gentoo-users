@@ -1,35 +1,46 @@
 package models
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"time"
+)
 
 type UserSchema struct {
-	user_id  string `json:"email"`
-	userInfo UserRegistration
+	UserId    string           `form:"user_id" json:"user_id" xml:"user_id"  binding:"required"`
+	UserInfo  UserRegistration `form:"user_info" json:"user_info" xml:"user_info"  binding:"required"`
+	CreatedOn time.Time        `form:"created_on" json:"created_on" xml:"created_on"  binding:"required"`
+	CanPost   bool             `form:"can_post" json:"can_post" xml:"can_post"  binding:"required"`
 }
 
 type UserRegistration struct {
-	email        string `json:"email"`
-	username     string `json:"username"`
-	google_photo string `json:"google_photo"`
-	description  string `json:"description"`
+	Email       string `form:"email" json:"email" xml:"email"  binding:"required"`
+	Username    string `form:"username" json:"username" xml:"username"  binding:"required"`
+	GooglePhoto string `form:"google_photo" json:"google_photo" xml:"google_photo"  binding:"required"`
+	Description string `form:"description" json:"description" xml:"description"  binding:"required"`
 }
 
 // HIGH PRIORITY
-func RegisterUser(userInfo *UserRegistration) error {
+func RegisterUser(userInfo UserRegistration) error {
 	sqlQuery := `
-		INSERT INTO users (email, username, google_photo, description)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (email, username, google_photo, description, created_on, can_post)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
+
+	createdOn := time.Now()
+
 	_, err := db.Exec(
 		sqlQuery,
-		userInfo.email,
-		userInfo.username,
-		userInfo.google_photo,
-		userInfo.description,
+		userInfo.Email,
+		userInfo.Username,
+		userInfo.GooglePhoto,
+		userInfo.Description,
+		createdOn,
+		true,
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Something went wrong with registering user")
 		return err
 	}
 
@@ -47,21 +58,23 @@ func GetUserInfo(email string) (*UserSchema, error) {
 
 	rows, err := db.Query(sqlQuery, email)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		return userInfo, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var id, email, username, googlePhoto, description string
-		err := rows.Scan(&id, &email, &username, &googlePhoto, &description)
+		var createdOn time.Time
+		var canPost bool
+		err := rows.Scan(&id, &username, &email, &description, &googlePhoto, &createdOn, &canPost)
 		if err != nil {
-			log.Fatal(err)
-			return userInfo, nil
+			fmt.Println(err)
+			return userInfo, err
 		}
 
-		userReg := &UserRegistration{email, username, googlePhoto, description}
-		user := &UserSchema{id, *userReg}
+		userReg := &UserRegistration{Email: email, Username: username, GooglePhoto: googlePhoto, Description: description}
+		user := &UserSchema{id, *userReg, createdOn, canPost}
 
 		userInfo = user
 	}

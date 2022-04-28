@@ -3,10 +3,9 @@ package services
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
-	"github.com/abcd-edu/gentoo-users/internal/models"
-	helpers "github.com/abcd-edu/gentoo-users/internal/services/helpers"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
@@ -52,28 +51,31 @@ func HandleGoogleLogin(c *gin.Context) {
 		- Redirect content to "/register-gl"
 */
 func CallBackFromGoogle(c *gin.Context) {
-	gentooHome := "http://localhost:3000/"
+	gentooHome := "http://localhost:3000/home"
 	gentooRegister := "http://localhost:3000/signup"
 
 	if c.Request.FormValue("state") != oauthStateStringGl {
+		log.Printf("Error: problem with state\n")
 		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 	}
 
 	token, err := oauthConfGl.Exchange(oauth2.NoContext, c.Request.FormValue("code"))
 	if err != nil {
+		log.Printf("Error: problem with code\n")
 		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 	}
 
 	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
+		log.Printf("Error: problem with access token\n")
 		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
-		return
 	}
 
 	defer resp.Body.Close()
 
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.Printf("Error: problem with response\n")
 		c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 	}
 
@@ -81,15 +83,15 @@ func CallBackFromGoogle(c *gin.Context) {
 	var jsonRes map[string]interface{}
 	_ = json.Unmarshal(resBytes, &jsonRes)
 	verified_email := jsonRes["verified_email"].(bool)
+	email := jsonRes["email"].(string)
 
 	if verified_email {
-		email := jsonRes["email"].(string)
-		helpers.SetUserInfo(email, c)
+		c.SetCookie("auth", token.AccessToken, 0, "/", "localhost:3000", false, true)
+		c.SetCookie("email", email, 0, "/", "localhost:3000", false, true)
 
-		_, err := models.GetUserInfo(email)
-		if err == nil {
-			c.Redirect(http.StatusTemporaryRedirect, gentooRegister)
-		}
+		// TODO: (MED PRIO) Instead of redirecting directly to signup page,
+		// check if user is registered then let's redirect them back to /home
+		c.Redirect(http.StatusTemporaryRedirect, gentooRegister)
 	}
 	c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 }

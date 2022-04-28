@@ -1,12 +1,14 @@
-port:
+serverPort: 8001
 
-oauthStateString:
+oauthStateString: ""
 google:
-  clientID:
-  clientSecret:
+  clientID: ""
+  clientSecret: ""
 
 db:
+  host: ""
+  dbPort: ""
   user: ""
   password: ""
-  dbName: ""
-  sslMode: ""
+  dbname: ""
+  sslmode: ""

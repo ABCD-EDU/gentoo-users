@@ -2,19 +2,31 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 )
 
-var db *sql.DB
+var (
+	db *sql.DB
+)
 
 func InitializeDB() {
-	connStr := "user=" + viper.GetString("user") + " password=" + viper.GetString("password") + " dbname=" + viper.GetString("dbName") + "sslmode=" + viper.GetString("sslMode")
+	host := viper.GetString("db.host")
+	port := viper.GetString("db.port")
+	user := viper.GetString("db.user")
+	password := viper.GetString("db.password")
+	dbname := viper.GetString("db.dbname")
 
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	fmt.Println(psqlInfo)
 	var err error
-	db, err = sql.Open("postgres", connStr)
+	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
 		log.Fatal(err)

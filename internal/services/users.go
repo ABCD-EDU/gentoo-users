@@ -1,6 +1,8 @@
 package services
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -9,30 +11,44 @@ import (
 )
 
 func Register(c *gin.Context) {
-	email := c.Query("email")
-	username := c.Query("username")
-	google_photo := c.Query("google_photo")
-	description := c.Query("description")
-
-	var test models.UserRegistration
-	if err := c.ShouldBindJSON(&test); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"RHUIAWHDIUWAHEDUIWAHDUIAWHI": err.Error()})
+	var user models.UserRegistration
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Content is not valid": err.Error()})
 		return
 	}
 
-	fmt.Printf("email: %s\n", test.Email)
-	fmt.Printf("usernaem: %s\n", test.Username)
-	fmt.Printf("photo: %s\n", test.GooglePhoto)
-	fmt.Printf("desc: %s\n", test.Description)
+	fmt.Printf("email: %s\n", user.Email)
+	fmt.Printf("usernaem: %s\n", user.Username)
+	fmt.Printf("photo: %s\n", user.GooglePhoto)
+	fmt.Printf("desc: %s\n", user.Description)
 
-	_ = models.UserRegistration{Email: email, Username: username, GooglePhoto: google_photo, Description: description}
-
-	err := models.RegisterUser(test)
+	userInfo, err := models.RegisterUser(user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",
 			"message": "User is already registered",
 		})
+		return
+	}
+
+	userJson, err := json.Marshal(userInfo)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "fail",
+			"message": "User is already registered",
+		})
+		return
+	}
+
+	fmt.Println(userJson)
+	_, err = http.Post("http://localhost:8002/v1/register", "application/json", bytes.NewBuffer(userJson))
+	if err != nil {
+		fmt.Println("CANNOT SEND POST REQUEST TO POST SERVICE")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "fail",
+			"message": "Something went wrong with Post Microservice",
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{

@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -21,15 +20,17 @@ type UserRegistration struct {
 }
 
 // HIGH PRIORITY
-func RegisterUser(userInfo UserRegistration) error {
+func RegisterUser(userInfo UserRegistration) (UserSchema, error) {
+	var userRegistered UserSchema
 	sqlQuery := `
 		INSERT INTO users (email, username, google_photo, description, created_on, can_post)
 		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING user_id 
 	`
 
 	createdOn := time.Now()
-
-	_, err := db.Exec(
+	var userId string
+	if err := db.QueryRow(
 		sqlQuery,
 		userInfo.Email,
 		userInfo.Username,
@@ -37,14 +38,15 @@ func RegisterUser(userInfo UserRegistration) error {
 		userInfo.Description,
 		createdOn,
 		true,
-	)
-
-	if err != nil {
-		log.Println("Something went wrong with registering user")
-		return err
+	).Scan(&userId); err != nil {
+		fmt.Println("SOMETHING WENT WRONG WITH WRITING TO DB AND GETTING THE ID")
+		fmt.Println(err)
+		return userRegistered, err
 	}
 
-	return nil
+	userRegistered = UserSchema{UserId: userId, UserInfo: userInfo, CreatedOn: createdOn, CanPost: true}
+
+	return userRegistered, nil
 }
 
 // HIGH PRIORITY

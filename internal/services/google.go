@@ -97,10 +97,12 @@ func CallBackFromGoogle(c *gin.Context) {
 		}
 
 		id := user.UserId
-		c.SetCookie("user_id", id, 0, "/", "localhost:3000", false, true)
-		// TODO: (MED PRIO) Instead of redirecting directly to signup page,
-		// check if user is registered then let's redirect them back to /home
+		if id != "" {
+			c.SetCookie("user_id", id, 0, "/", "localhost:3000", false, true)
+			c.Redirect(http.StatusTemporaryRedirect, gentooHome)
+		}
 		c.Redirect(http.StatusTemporaryRedirect, gentooRegister)
 	}
+
 	c.Redirect(http.StatusTemporaryRedirect, gentooHome)
 }

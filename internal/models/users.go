@@ -10,6 +10,7 @@ type UserSchema struct {
 	UserInfo  UserRegistration `form:"user_info" json:"user_info" xml:"user_info"  binding:"required"`
 	CreatedOn time.Time        `form:"created_on" json:"created_on" xml:"created_on"  binding:"required"`
 	CanPost   bool             `form:"can_post" json:"can_post" xml:"can_post"  binding:"required"`
+	IsAdmin   bool             `form:"is_admin" json:"is_admin" xml:"is_admin"  binding:"required"`
 }
 
 type UserRegistration struct {
@@ -23,8 +24,8 @@ type UserRegistration struct {
 func RegisterUser(userInfo UserRegistration) (UserSchema, error) {
 	var userRegistered UserSchema
 	sqlQuery := `
-		INSERT INTO users (email, username, google_photo, description, created_on, can_post)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO users (email, username, google_photo, description, created_on, can_post, is_admin)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING user_id 
 	`
 
@@ -38,13 +39,14 @@ func RegisterUser(userInfo UserRegistration) (UserSchema, error) {
 		userInfo.Description,
 		createdOn,
 		true,
+		false,
 	).Scan(&userId); err != nil {
 		fmt.Println("SOMETHING WENT WRONG WITH WRITING TO DB AND GETTING THE ID")
 		fmt.Println(err)
 		return userRegistered, err
 	}
 
-	userRegistered = UserSchema{UserId: userId, UserInfo: userInfo, CreatedOn: createdOn, CanPost: true}
+	userRegistered = UserSchema{UserId: userId, UserInfo: userInfo, CreatedOn: createdOn, CanPost: true, IsAdmin: false}
 
 	return userRegistered, nil
 }
@@ -68,15 +70,15 @@ func GetUserInfo(column string, param string) (*UserSchema, error) {
 	for rows.Next() {
 		var id, email, username, googlePhoto, description string
 		var createdOn time.Time
-		var canPost bool
-		err := rows.Scan(&id, &username, &email, &description, &googlePhoto, &createdOn, &canPost)
+		var canPost, isAdmin bool
+		err := rows.Scan(&id, &username, &email, &description, &googlePhoto, &createdOn, &canPost, &isAdmin)
 		if err != nil {
 			fmt.Println(err)
 			return userInfo, err
 		}
 
 		userReg := &UserRegistration{Email: email, Username: username, GooglePhoto: googlePhoto, Description: description}
-		user := &UserSchema{id, *userReg, createdOn, canPost}
+		user := &UserSchema{id, *userReg, createdOn, canPost, isAdmin}
 
 		userInfo = user
 	}

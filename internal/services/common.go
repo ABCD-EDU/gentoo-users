@@ -1,7 +1,9 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -63,44 +65,77 @@ func HandleAuthentication(c *gin.Context) {
 	}
 	fmt.Printf("TOKEN FROM COOKIE: %s\n", authToken)
 
-	email, err := c.Cookie("email")
+	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + authToken)
 	if err != nil {
 		fmt.Println(err)
-		c.JSON(http.StatusOK, gin.H{
-			"state":      true,
-			"message":    "authorized",
+		c.JSON(http.StatusNotFound, gin.H{
+			"state":      false,
+			"message":    "unauthorized",
 			"token":      authToken,
 			"registered": false,
 		})
-		return
-	}
-	fmt.Printf("EMAIL FROM COOKIE: %s\n", email)
 
-	user, err := models.GetUserInfo("email", email)
+	}
+
+	defer resp.Body.Close()
+
+	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"state":      true,
-			"message":    "authorized",
+		fmt.Println(err)
+		c.JSON(http.StatusNotFound, gin.H{
+			"state":      false,
+			"message":    "unauthorized",
 			"token":      authToken,
 			"registered": false,
 		})
-		return
-	}
-	fmt.Printf("EMAIL FROM DATABASE: %s\n", user.UserInfo.Email)
 
-	if user.UserInfo.Email == email {
-		c.JSON(http.StatusOK, gin.H{
-			"state":      true,
-			"message":    "authorized",
-			"token":      authToken,
-			"registered": true,
-		})
-		return
+	}
+
+	resBytes := []byte(string(string(content)))
+	var jsonRes map[string]interface{}
+	_ = json.Unmarshal(resBytes, &jsonRes)
+	verified_email := jsonRes["verified_email"].(bool)
+
+	if verified_email {
+		email, err := c.Cookie("email")
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(http.StatusNotFound, gin.H{
+				"state":      true,
+				"message":    "authorized",
+				"token":      authToken,
+				"registered": false,
+			})
+			return
+		}
+		fmt.Printf("EMAIL FROM COOKIE: %s\n", email)
+
+		user, err := models.GetUserInfo("email", email)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"state":      true,
+				"message":    "authorized",
+				"token":      authToken,
+				"registered": false,
+			})
+			return
+		}
+		fmt.Printf("EMAIL FROM DATABASE: %s\n", user.UserInfo.Email)
+
+		if user.UserInfo.Email == email {
+			c.JSON(http.StatusOK, gin.H{
+				"state":      true,
+				"message":    "authorized",
+				"token":      authToken,
+				"registered": true,
+			})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"state":      true,
-		"message":    "authorized",
+		"state":      false,
+		"message":    "unauthorized",
 		"token":      authToken,
 		"registered": false,
 	})

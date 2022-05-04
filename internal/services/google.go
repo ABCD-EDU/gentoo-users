@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/abcd-edu/gentoo-users/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
@@ -89,6 +90,14 @@ func CallBackFromGoogle(c *gin.Context) {
 		c.SetCookie("auth", token.AccessToken, 0, "/", "localhost:3000", false, true)
 		c.SetCookie("email", email, 0, "/", "localhost:3000", false, true)
 
+		user, err := models.GetUserInfo("email", email)
+		if err != nil {
+			c.Redirect(http.StatusTemporaryRedirect, gentooRegister)
+			return
+		}
+
+		id := user.UserId
+		c.SetCookie("user_id", id, 0, "/", "localhost:3000", false, true)
 		// TODO: (MED PRIO) Instead of redirecting directly to signup page,
 		// check if user is registered then let's redirect them back to /home
 		c.Redirect(http.StatusTemporaryRedirect, gentooRegister)

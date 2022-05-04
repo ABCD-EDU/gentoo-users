@@ -65,6 +65,7 @@ func HandleAuthentication(c *gin.Context) {
 
 	email, err := c.Cookie("email")
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusOK, gin.H{
 			"state":      true,
 			"message":    "authorized",
@@ -75,7 +76,7 @@ func HandleAuthentication(c *gin.Context) {
 	}
 	fmt.Printf("EMAIL FROM COOKIE: %s\n", email)
 
-	user, err := models.GetUserInfo(email)
+	user, err := models.GetUserInfo("email", email)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"state":      true,

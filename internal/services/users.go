@@ -17,11 +17,6 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("email: %s\n", user.Email)
-	fmt.Printf("usernaem: %s\n", user.Username)
-	fmt.Printf("photo: %s\n", user.GooglePhoto)
-	fmt.Printf("desc: %s\n", user.Description)
-
 	userInfo, err := models.RegisterUser(user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -51,28 +46,31 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("user_id", userInfo.UserId, 0, "/", "localhost:3000", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }
 
 func GetUser(c *gin.Context) {
-	email, err := c.Cookie("email")
 	c.Header("Content-Type", "application/json")
-
+	userId, err := c.Cookie("user_id")
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",
 			"message": "User not found",
 		})
+		return
 	}
 
-	user, err := models.GetUserInfo(email)
+	user, err := models.GetUserInfo("user_id", userId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",
 			"message": "User not found",
 		})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{

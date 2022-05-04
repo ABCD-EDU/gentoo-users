@@ -29,7 +29,7 @@ func main() {
 		v1.POST("/register", services.Register)
 		v1.GET("/logout", services.HandleLogout)
 		v1.Any("/auth", services.HandleAuthentication)
-		v1.GET("user", services.GetUser)
+		v1.GET("/user", services.GetUser)
 	}
 
 	port := viper.GetString("serverPort")

@@ -50,15 +50,15 @@ func RegisterUser(userInfo UserRegistration) (UserSchema, error) {
 }
 
 // HIGH PRIORITY
-func GetUserInfo(email string) (*UserSchema, error) {
+func GetUserInfo(column string, param string) (*UserSchema, error) {
 	userInfo := new(UserSchema)
-	sqlQuery := `
-		SELECT * FROM users
-		WHERE email=$1
-		LIMIT 1
-	`
+	sqlQuery := fmt.Sprintf(`
+	SELECT * FROM users
+	WHERE %s=$1
+	LIMIT 1
+	`, column)
 
-	rows, err := db.Query(sqlQuery, email)
+	rows, err := db.Query(sqlQuery, param)
 	if err != nil {
 		fmt.Println(err)
 		return userInfo, err

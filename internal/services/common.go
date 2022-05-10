@@ -127,6 +127,7 @@ func HandleAuthentication(c *gin.Context) {
 				"state":      true,
 				"message":    "authorized",
 				"token":      authToken,
+				"user_id":    user.UserId,
 				"registered": true,
 			})
 			return

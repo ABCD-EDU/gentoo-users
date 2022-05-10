@@ -54,15 +54,7 @@ func Register(c *gin.Context) {
 
 func GetUser(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
-	userId, err := c.Cookie("user_id")
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
-			"message": "User not found",
-		})
-		return
-	}
+	userId := c.Query("user_id")
 
 	user, err := models.GetUserInfo("user_id", userId)
 	if err != nil {

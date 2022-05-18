@@ -86,12 +86,31 @@ func GetUserInfo(column string, param string) (*UserSchema, error) {
 	return userInfo, nil
 }
 
-// LOW PRIORITY
-func UpdateUserInfo(userInfo UserRegistration) error {
+func MuteUser(userId string) error {
+	sqlQuery := `
+		UPDATE users
+		SET can_post=false
+		WHERE user_id=$1;
+		`
+
+	_, err := db.Exec(sqlQuery, userId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// LOW PRIORITY
-func DeleteUserInfo(email string) error {
+func BanUser(userId string) error {
+	sqlQuery := `
+		DELETE FROM users
+		WHERE user_id=$1;
+		`
+
+	_, err := db.Exec(sqlQuery, userId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

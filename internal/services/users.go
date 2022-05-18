@@ -72,6 +72,79 @@ func GetUser(c *gin.Context) {
 	})
 }
 
+func MuteUser(c *gin.Context) {
+	idToMute := c.Query("user_id")
+
+	fmt.Println(idToMute)
+	err := models.MuteUser(idToMute)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "fail",
+		})
+		return
+	}
+
+	userJson, err := json.Marshal(gin.H{"user_id": idToMute})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "fail",
+		})
+		return
+	}
+
+	_, err = http.Post("http://localhost:8002/v1/user/mute", "application/json", bytes.NewBuffer(userJson))
+	if err != nil {
+		fmt.Println("CANNOT SEND POST REQUEST TO POST SERVICE")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "fail",
+			"message": "Something went wrong with Post Microservice",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+	})
+}
+
+func BanUser(c *gin.Context) {
+	idToBan := c.Query("user_id")
+
+	fmt.Println(idToBan)
+	err := models.BanUser(idToBan)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "fail",
+		})
+		return
+	}
+
+	userJson, err := json.Marshal(gin.H{"user_id": idToBan})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "fail",
+		})
+		return
+	}
+
+	_, err = http.Post("http://localhost:8002/v1/user/ban", "application/json", bytes.NewBuffer(userJson))
+	if err != nil {
+		fmt.Println("CANNOT SEND POST REQUEST TO POST SERVICE")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "fail",
+			"message": "Something went wrong with Post Microservice",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+	})
+
+}
+
 func UpdateUser(c *gin.Context) {
 
 }

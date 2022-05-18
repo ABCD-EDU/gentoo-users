@@ -30,6 +30,8 @@ func main() {
 		v1.GET("/logout", services.HandleLogout)
 		v1.Any("/auth", services.HandleAuthentication)
 		v1.GET("/user", services.GetUser)
+		v1.POST("/user/mute", services.MuteUser)
+		v1.POST("/user/ban", services.BanUser)
 	}
 
 	port := viper.GetString("serverPort")

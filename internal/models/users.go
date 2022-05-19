@@ -10,7 +10,7 @@ type UserSchema struct {
 	UserInfo  UserRegistration `form:"user_info" json:"user_info" xml:"user_info"  binding:"required"`
 	CreatedOn time.Time        `form:"created_on" json:"created_on" xml:"created_on"  binding:"required"`
 	CanPost   bool             `form:"can_post" json:"can_post" xml:"can_post"  binding:"required"`
-	IsAdmin   bool             `form:"is_admin" json:"is_admin" xml:"is_admin"  binding:"required"`
+	IsAdmin   bool             `form:"is_admin" json:"is_admin" xml:"is_admin"`
 }
 
 type UserRegistration struct {
@@ -26,7 +26,7 @@ func RegisterUser(userInfo UserRegistration) (UserSchema, error) {
 	sqlQuery := `
 		INSERT INTO users (email, username, google_photo, description, created_on, can_post, is_admin)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING user_id 
+		RETURNING user_id
 	`
 
 	createdOn := time.Now()
